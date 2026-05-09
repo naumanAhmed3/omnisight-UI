@@ -61,7 +61,8 @@ export function useFaceDetection() {
       }
 
       try {
-        const FACEAPI_CDN = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+        // npm package for face-api.js@0.22.2 ships without /weights/ — load from GitHub via jsdelivr-gh instead.
+        const FACEAPI_CDN = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
         await faceapi.nets.ssdMobilenetv1.loadFromUri(FACEAPI_CDN);
         await faceapi.nets.faceRecognitionNet.loadFromUri(FACEAPI_CDN);
         await faceapi.nets.faceLandmark68Net.loadFromUri(FACEAPI_CDN);
