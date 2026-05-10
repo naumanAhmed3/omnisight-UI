@@ -1,10 +1,9 @@
 export function getApiBase() {
-  if (typeof window === 'undefined') return '/api';
-  const host = window.location.hostname;
-  if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) {
-    return '/api';
-  }
-  return 'https://watchtower-backend-2ct4.onrender.com';
+  // Always go through the Vercel API routes. They host the OpenAI vision call
+  // AND the Upstash-backed rate limit gate. Production traffic used to bypass
+  // both by going direct to a Render backend; that's intentionally removed
+  // so the rate limiter actually applies and we drop the Render cold-start.
+  return '/api';
 }
 
 export async function analyzeFrameAPI(frame: string, prompt: string) {

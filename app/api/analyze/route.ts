@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { consumeRateLimit, rateLimitedResponse } from '@/lib/rate-limit';
 
 // Lazy init — don't create at build time
 let _openai: OpenAI | null = null;
@@ -9,7 +10,22 @@ function getOpenAI() {
 
 export const maxDuration = 30;
 
+// Each /api/analyze hits OpenAI vision once. The frontend polls every 5s
+// while a watch session is active, so charging 5s/call lines up with real
+// elapsed time. 600s/day per IP -> ~120 frame analyses (5 watch sessions).
+const COST_SECONDS = 5;
+
 export async function POST(req: Request) {
+  const limit = await consumeRateLimit('vision', req, COST_SECONDS);
+  if (!limit.allowed) {
+    return rateLimitedResponse(
+      limit,
+      limit.reason === 'global_exhausted'
+        ? 'The surveillance demo has reached its daily budget. Come back tomorrow.'
+        : "You've used your 10 minutes of monitoring today. Come back tomorrow.",
+    );
+  }
+
   try {
     const { frame, prompt } = await req.json();
     if (!frame || !prompt) {
@@ -51,7 +67,16 @@ The "region" field should indicate WHERE in the frame the activity is occurring.
 
     const text = response.choices[0]?.message?.content || '{}';
     const match = text.match(/\{[\s\S]*\}/);
-    return Response.json(match ? JSON.parse(match[0]) : { detected: false, confidence: 0, description: 'Parse error' });
+    return Response.json(
+      match ? JSON.parse(match[0]) : { detected: false, confidence: 0, description: 'Parse error' },
+      {
+        headers: {
+          'X-Demo-Budget-Remaining-Seconds': String(limit.remainingPerIpSeconds),
+          'X-Demo-Global-Remaining-Seconds': String(limit.remainingGlobalSeconds),
+          'X-RateLimit-Reset': String(limit.resetAtUnix),
+        },
+      },
+    );
   } catch (error: any) {
     console.error('Analyze error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });

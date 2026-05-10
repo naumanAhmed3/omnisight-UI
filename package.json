@@ -17,6 +17,7 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@upstash/redis": "^1.38.0",
     "face-api.js": "^0.22.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.0.1",
