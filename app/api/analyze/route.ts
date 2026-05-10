@@ -26,10 +26,18 @@ export async function POST(req: Request) {
     );
   }
 
+  // Echo the rate-limit state on every response from this point forward.
+  // The user's budget has already been charged for this request.
+  const budgetHeaders = {
+    'X-Demo-Budget-Remaining-Seconds': String(limit.remainingPerIpSeconds),
+    'X-Demo-Global-Remaining-Seconds': String(limit.remainingGlobalSeconds),
+    'X-RateLimit-Reset': String(limit.resetAtUnix),
+  };
+
   try {
     const { frame, prompt } = await req.json();
     if (!frame || !prompt) {
-      return Response.json({ error: 'Missing frame or prompt' }, { status: 400 });
+      return Response.json({ error: 'Missing frame or prompt' }, { status: 400, headers: budgetHeaders });
     }
 
     // Ensure frame is a proper data URL
@@ -42,7 +50,7 @@ export async function POST(req: Request) {
     // Validate it's a real data URL with actual base64 content
     const base64Part = imageUrl.split(',')[1];
     if (!base64Part || base64Part.length < 100) {
-      return Response.json({ error: 'Invalid image data — too small or empty' }, { status: 400 });
+      return Response.json({ error: 'Invalid image data — too small or empty' }, { status: 400, headers: budgetHeaders });
     }
 
     const response = await getOpenAI().chat.completions.create({
@@ -69,16 +77,10 @@ The "region" field should indicate WHERE in the frame the activity is occurring.
     const match = text.match(/\{[\s\S]*\}/);
     return Response.json(
       match ? JSON.parse(match[0]) : { detected: false, confidence: 0, description: 'Parse error' },
-      {
-        headers: {
-          'X-Demo-Budget-Remaining-Seconds': String(limit.remainingPerIpSeconds),
-          'X-Demo-Global-Remaining-Seconds': String(limit.remainingGlobalSeconds),
-          'X-RateLimit-Reset': String(limit.resetAtUnix),
-        },
-      },
+      { headers: budgetHeaders },
     );
   } catch (error: any) {
     console.error('Analyze error:', error.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500, headers: budgetHeaders });
   }
 }
