@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Nav } from '@/components/nav';
-import { GithubMark } from '@/components/github-mark';
+import { OrchantaMark } from '@/components/orchanta-mark';
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
@@ -53,16 +53,6 @@ const APPROACH = [
 
 const STACK = ['Next.js 16', 'React 19', 'face-api.js', 'MediaPipe', 'ONNX Runtime', 'GPT-4o vision', 'Tailwind 4'];
 
-const LEARNED = [
-  'How much surprisingly heavy machine-learning work can run in the browser before you need a server.',
-  'Trade-offs between face-api.js and MediaPipe for tracking faces on the same live feed.',
-];
-
-const NEXT = [
-  'Running many cameras together, with a real backend and database.',
-  'User permissions, data retention rules, and an audit trail — the unglamorous parts a real deployment needs.',
-];
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
@@ -79,7 +69,7 @@ export default function Home() {
         <motion.div className="max-w-3xl" {...fadeUp}>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] text-white/40 tracking-wide">Portfolio Project &middot; Proof-of-Concept</span>
+            <span className="text-[11px] text-white/40 tracking-wide">Client engagement &middot; Live demo</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
@@ -94,7 +84,7 @@ export default function Home() {
           </p>
 
           <p className="text-sm text-white/30 max-w-lg leading-relaxed mb-10">
-            <span className="text-white/70 font-medium">OmniSight</span> is a proof-of-concept for AI-assisted surveillance: write a rule, the system watches every feed for it.
+            <span className="text-white/70 font-medium">OmniSight</span> is an AI-assisted surveillance system: write a rule in plain English, and it watches every feed for it.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -229,52 +219,18 @@ export default function Home() {
         <motion.div className="max-w-3xl" {...fadeUp}>
           <span className="text-[10px] text-white/20 tracking-[0.2em] uppercase">Honest scope</span>
           <p className="text-sm text-white/45 leading-relaxed mt-3">
-            This is a single-webcam proof-of-concept, not a production system. A real deployment would need many cameras working together, a database, user permissions, data retention rules, and a much faster AI step. Built solo as a personal portfolio project &mdash; no real customer, no real warehouses, no fake testimonials.
+            This live demo runs on a single webcam to show the core idea end-to-end. A full production rollout would add many cameras working together, a database, user permissions, data-retention rules, and a faster server-side AI step.
           </p>
         </motion.div>
-      </section>
-
-      {/* Reflection */}
-      <section className="relative max-w-5xl mx-auto px-6 pb-24">
-        <div className="mb-8">
-          <span className="text-[10px] text-white/20 tracking-[0.2em] uppercase">Reflection</span>
-          <h2 className="text-2xl sm:text-3xl font-semibold mt-3 text-white/85 max-w-2xl leading-tight">
-            What I learned, and what I&apos;d build next.
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <motion.div className="p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]" {...fadeUp}>
-            <p className="text-[10px] text-emerald-400/70 tracking-[0.2em] uppercase mb-4">What I learned</p>
-            <ul className="space-y-3">
-              {LEARNED.map((item, i) => (
-                <li key={i} className="flex gap-3 text-xs text-white/55 leading-relaxed">
-                  <span className="text-emerald-400/60 mt-0.5">&#x2022;</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-          <motion.div className="p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]" {...fadeUp} transition={{ delay: 0.1 }}>
-            <p className="text-[10px] text-cyan-400/70 tracking-[0.2em] uppercase mb-4">What I&apos;d build next</p>
-            <ul className="space-y-3">
-              {NEXT.map((item, i) => (
-                <li key={i} className="flex gap-3 text-xs text-white/55 leading-relaxed">
-                  <span className="text-cyan-400/60 mt-0.5">&#x2022;</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-white/[0.06] relative">
         <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between gap-4">
-          <Link href="/" aria-label="naumanAhmed3 — home">
-            <GithubMark />
+          <Link href="/" aria-label="OmniSight — home">
+            <OrchantaMark />
           </Link>
-          <span className="text-[10px] text-white/15 font-mono tracking-wider">OmniSight &middot; Portfolio</span>
+          <span className="text-[10px] text-white/15 font-mono tracking-wider">OmniSight &middot; Built by Orchanta</span>
         </div>
       </footer>
     </div>
