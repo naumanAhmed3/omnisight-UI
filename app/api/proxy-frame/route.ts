@@ -4,6 +4,16 @@
 
 export const maxDuration = 10;
 
+function allowedFrameUrl(raw: string): URL {
+  const url = new URL(raw);
+  if (url.protocol !== 'https:') throw new Error('Camera URL must use HTTPS');
+  const allowed = (process.env.CAMERA_ALLOWED_HOSTS ?? '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+  if (!allowed.length || !allowed.includes(url.hostname.toLowerCase())) {
+    throw new Error('Camera host is not allowlisted');
+  }
+  return url;
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get('url');
@@ -16,7 +26,8 @@ export async function GET(req: Request) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
 
-    const res = await fetch(url, { signal: controller.signal });
+    const target = allowedFrameUrl(url);
+    const res = await fetch(target, { signal: controller.signal, redirect: 'error' });
     const reader = res.body?.getReader();
     if (!reader) { clearTimeout(timeout); return Response.json({ error: 'No stream' }, { status: 502 }); }
 

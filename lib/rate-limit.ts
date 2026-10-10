@@ -52,9 +52,9 @@ export async function consumeRateLimit(site: string, req: Request, costSeconds: 
 
   if (!redis) {
     return {
-      allowed: true,
-      remainingPerIpSeconds: PER_IP_DAILY_MAX_SECONDS,
-      remainingGlobalSeconds: GLOBAL_DAILY_MAX_SECONDS,
+      allowed: false,
+      remainingPerIpSeconds: 0,
+      remainingGlobalSeconds: 0,
       resetAtUnix,
       reason: "redis_unavailable",
     };

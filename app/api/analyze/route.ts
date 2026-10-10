@@ -39,6 +39,12 @@ export async function POST(req: Request) {
     if (!frame || !prompt) {
       return Response.json({ error: 'Missing frame or prompt' }, { status: 400, headers: budgetHeaders });
     }
+    if (typeof prompt !== 'string' || prompt.length > 500) {
+      return Response.json({ error: 'Prompt is too long' }, { status: 400, headers: budgetHeaders });
+    }
+    if (typeof frame !== 'string' || frame.length > 4_500_000) {
+      return Response.json({ error: 'Frame exceeds the 3 MB limit' }, { status: 413, headers: budgetHeaders });
+    }
 
     // Ensure frame is a proper data URL
     let imageUrl = frame;
