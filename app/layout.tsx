@@ -6,7 +6,7 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
 
 export const metadata: Metadata = {
   title: 'OmniSight — AI Video Monitoring | Orchanta',
-  description: 'AI-assisted surveillance: describe a threat in plain English and the system watches every feed for it. In-browser face detection plus GPT-4o vision. An Orchanta client engagement.',
+  description: 'Explore camera-frame activity analysis with natural-language watch rules, reviewable evidence and session reports. An interactive OmniSight product demo.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

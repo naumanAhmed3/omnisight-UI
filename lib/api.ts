@@ -12,5 +12,7 @@ export async function analyzeFrameAPI(frame: string, prompt: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ frame, prompt }),
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'The frame could not be analyzed. Please try again.');
+  return data;
 }

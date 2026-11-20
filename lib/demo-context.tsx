@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useRef, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useRef, useCallback, useEffect, type ReactNode } from 'react';
 import { useFaceDetection } from './use-face-detection';
 import { analyzeFrameAPI } from './api';
 import type { Alert, FaceEntry, DemoStats } from './types';
@@ -13,6 +13,7 @@ interface DemoContextType {
   alerts: Alert[];
   faceGallery: FaceEntry[];
   stats: DemoStats;
+  analysisError: string;
   analyzing: boolean;
   currentFrame: string;
   analyzeFrame: (frame: string) => Promise<any>;
@@ -36,11 +37,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [prompt, setPrompt] = useState('');
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [faceGallery, setFaceGallery] = useState<FaceEntry[]>([]);
+  const [analysisError, setAnalysisError] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [currentFrame, setCurrentFrame] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(DEMO_DURATION);
   const [timerActive, setTimerActive] = useState(false);
 
+  const busyRef = useRef(false);
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
   const alertIdRef = useRef(0);
   const faceIdRef = useRef(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,7 +52,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const { detectFaces, faceApiReady, resetKnownFaces } = useFaceDetection();
 
   const analyzeFrame = useCallback(async (frame: string) => {
-    if (!prompt.trim()) return null;
+    if (!prompt.trim() || busyRef.current) return null;
+    busyRef.current = true;
+    setAnalysisError('');
     setAnalyzing(true);
     setCurrentFrame(frame);
     try {
@@ -132,9 +138,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         thumbnail,
       };
       setAlerts(prev => [alert, ...prev].slice(0, 50));
+      busyRef.current = false;
       setAnalyzing(false);
       return result;
-    } catch {
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : 'The frame could not be analyzed.');
+      busyRef.current = false;
       setAnalyzing(false);
       return null;
     }
@@ -165,6 +174,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimerActive(false);
     setTimeRemaining(DEMO_DURATION);
+    setAnalysisError('');
     setAlerts([]);
     setFaceGallery([]);
     setAnalyzing(false);
@@ -184,7 +194,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   return (
     <DemoContext.Provider value={{
-      prompt, setPrompt, alerts, faceGallery, stats, analyzing, currentFrame,
+      prompt, setPrompt, alerts, faceGallery, stats, analyzing, analysisError, currentFrame,
       analyzeFrame, timeRemaining, timerActive, startSession, endSession, resetSession, faceApiReady,
     }}>
       {children}
