@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { consumeRateLimit, rateLimitedResponse } from '@/lib/rate-limit';
 
 // Lazy init — don't create at build time
 let _deepseek: OpenAI | null = null;
@@ -10,43 +9,11 @@ function getDeepSeek() {
 
 export const maxDuration = 30;
 
-// Each /api/analyze hits DeepSeek vision once. The frontend polls every 5s
-// while a watch session is active, so charging 5s/call lines up with real
-// elapsed time. 600s/day per IP -> ~120 frame analyses (5 watch sessions).
-const COST_SECONDS = 5;
-
 export async function POST(req: Request) {
-  let limit: Awaited<ReturnType<typeof consumeRateLimit>>;
-  try {
-    limit = await consumeRateLimit('vision', req, COST_SECONDS);
-  } catch {
-    console.error('Frame analysis budget service unavailable');
-    return Response.json(
-      { error: 'Monitoring is temporarily unavailable. Please try again later.' },
-      { status: 503, headers: { 'Retry-After': '60' } },
-    );
-  }
-  if (!limit.allowed) {
-    return rateLimitedResponse(
-      limit,
-      limit.reason === 'global_exhausted'
-        ? 'The surveillance demo has reached its daily budget. Come back tomorrow.'
-        : "You've used your 10 minutes of monitoring today. Come back tomorrow.",
-    );
-  }
-
-  // Echo the rate-limit state on every response from this point forward.
-  // The user's budget has already been charged for this request.
-  const budgetHeaders = {
-    'X-Demo-Budget-Remaining-Seconds': String(limit.remainingPerIpSeconds),
-    'X-Demo-Global-Remaining-Seconds': String(limit.remainingGlobalSeconds),
-    'X-RateLimit-Reset': String(limit.resetAtUnix),
-  };
-
   try {
     const { frame, prompt } = await req.json();
     if (!frame || !prompt) {
-      return Response.json({ error: 'Missing frame or prompt' }, { status: 400, headers: budgetHeaders });
+      return Response.json({ error: 'Missing frame or prompt' }, { status: 400 });
     }
 
     // Ensure frame is a proper data URL
@@ -59,7 +26,7 @@ export async function POST(req: Request) {
     // Validate it's a real data URL with actual base64 content
     const base64Part = imageUrl.split(',')[1];
     if (!base64Part || base64Part.length < 100) {
-      return Response.json({ error: 'Invalid image data — too small or empty' }, { status: 400, headers: budgetHeaders });
+      return Response.json({ error: 'Invalid image data — too small or empty' }, { status: 400 });
     }
 
     const response = await getDeepSeek().chat.completions.create({
@@ -88,10 +55,9 @@ The "region" field should indicate WHERE in the frame the activity is occurring.
     const match = text.match(/\{[\s\S]*\}/);
     return Response.json(
       match ? JSON.parse(match[0]) : { detected: false, confidence: 0, description: 'Parse error' },
-      { headers: budgetHeaders },
     );
   } catch (error: any) {
     console.error('Frame analysis provider request failed');
-    return Response.json({ error: 'Frame analysis is temporarily unavailable. Please try again.' }, { status: 500, headers: budgetHeaders });
+    return Response.json({ error: 'Frame analysis is temporarily unavailable. Please try again.' }, { status: 500 });
   }
 }
