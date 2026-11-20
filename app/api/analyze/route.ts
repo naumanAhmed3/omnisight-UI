@@ -2,15 +2,15 @@ import OpenAI from 'openai';
 import { consumeRateLimit, rateLimitedResponse } from '@/lib/rate-limit';
 
 // Lazy init — don't create at build time
-let _openai: OpenAI | null = null;
-function getOpenAI() {
-  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  return _openai;
+let _deepseek: OpenAI | null = null;
+function getDeepSeek() {
+  if (!_deepseek) _deepseek = new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY?.trim(), baseURL: 'https://api.deepseek.com', timeout: 25000, maxRetries: 0 });
+  return _deepseek;
 }
 
 export const maxDuration = 30;
 
-// Each /api/analyze hits OpenAI vision once. The frontend polls every 5s
+// Each /api/analyze hits DeepSeek vision once. The frontend polls every 5s
 // while a watch session is active, so charging 5s/call lines up with real
 // elapsed time. 600s/day per IP -> ~120 frame analyses (5 watch sessions).
 const COST_SECONDS = 5;
@@ -53,8 +53,10 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Invalid image data — too small or empty' }, { status: 400, headers: budgetHeaders });
     }
 
-    const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-4o-mini',
+    const response = await getDeepSeek().chat.completions.create({
+      model: 'deepseek-flash',
+      ...{ thinking: { type: 'disabled' } },
+      response_format: { type: 'json_object' },
       max_tokens: 200,
       messages: [
         {
@@ -80,7 +82,7 @@ The "region" field should indicate WHERE in the frame the activity is occurring.
       { headers: budgetHeaders },
     );
   } catch (error: any) {
-    console.error('Analyze error:', error.message);
-    return Response.json({ error: error.message }, { status: 500, headers: budgetHeaders });
+    console.error('Frame analysis provider request failed');
+    return Response.json({ error: 'Frame analysis is temporarily unavailable. Please try again.' }, { status: 500, headers: budgetHeaders });
   }
 }
