@@ -16,7 +16,16 @@ export const maxDuration = 30;
 const COST_SECONDS = 5;
 
 export async function POST(req: Request) {
-  const limit = await consumeRateLimit('vision', req, COST_SECONDS);
+  let limit: Awaited<ReturnType<typeof consumeRateLimit>>;
+  try {
+    limit = await consumeRateLimit('vision', req, COST_SECONDS);
+  } catch {
+    console.error('Frame analysis budget service unavailable');
+    return Response.json(
+      { error: 'Monitoring is temporarily unavailable. Please try again later.' },
+      { status: 503, headers: { 'Retry-After': '60' } },
+    );
+  }
   if (!limit.allowed) {
     return rateLimitedResponse(
       limit,
